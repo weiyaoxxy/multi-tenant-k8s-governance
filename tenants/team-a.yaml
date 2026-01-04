@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: team-a
+  labels:
+    owner: team-a
+    environment: dev
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: team-a
+  name: team-a-developer
+rules:
+- apiGroups: ["", "apps", "batch"]
+  resources: ["pods", "deployments", "jobs"]
+  verbs: ["get", "list", "create", "update", "delete"]
+
+---
+apiGroup: rbac.authorization.k8s.io
+kind: RoleBinding
+metadata:
+  name: team-a-devs
+  namespace: team-a
+subjects:
+- kind: Group
+  name: team-a-devs@example.com   # 映射到 IdP 组
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: team-a-developer
+  apiGroup: rbac.authorization.k8s.io

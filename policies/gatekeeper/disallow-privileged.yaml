@@ -1,0 +1,12 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sPSPPrivilegedContainer
+metadata:
+  name: psp-privileged-container
+spec:
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+    namespaces: ["team-a", "team-b"]  # 仅对租户命名空间生效
+  parameters:
+    exemptImages: ["trusted-image-*"]

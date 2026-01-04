@@ -1,0 +1,27 @@
+name: Apply Tenants to Cluster
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production  # 需在 GitHub 中配置环境和审批
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Gatekeeper (if not present)
+        run: |
+          kubectl apply -f https://raw.githubusercontent.com/open-policy-agent/gatekeeper/master/deploy/gatekeeper.yaml
+          kubectl rollout status -n gatekeeper-system deployment/gatekeeper-controller-manager --timeout=60s
+
+      - name: Apply Gatekeeper Constraints
+        run: kubectl apply -f policies/gatekeeper/
+
+      - name: Apply Tenant Configs
+        run: kubectl apply -f tenants/
+
+      - name: Verify Deployment
+        run: |
+          kubectl get ns team-a team-b
+          kubectl get constraint psp-privileged-container

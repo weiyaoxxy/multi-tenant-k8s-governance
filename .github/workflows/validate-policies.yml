@@ -1,0 +1,32 @@
+name: Validate Tenant Policies
+
+on: [pull_request]
+
+jobs:
+  validate-yaml:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check YAML syntax
+        run: |
+          yq e '.' tenants/*.yaml policies/rbac/*.yaml policies/gatekeeper/*.yaml
+
+  test-opa-policies:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Conftest
+        uses: docker://openpolicyagent/conftest:v0.43.1
+        with:
+          args: test tests/conftest/ -p policies/gatekeeper/
+
+  test-rbac:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Kind
+        uses: helm/kind-action@v1.4.0
+      - name: Apply RBAC and test
+        run: |
+          kubectl apply -f tenants/team-a.yaml
+          ./tests/rbac-test.sh
